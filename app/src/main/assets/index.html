@@ -27,24 +27,22 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
 
 /* ---------- clock ---------- */
 .clock{position:absolute;left:70px;top:44px;font-size:112px;font-weight:300;line-height:1;letter-spacing:-.045em;
-  color:rgba(255,255,255,.96);text-shadow:0 6px 34px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
+  color:rgba(255,255,255,.96);text-shadow:0 4px 18px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
 
 /* ---------- settings button ---------- */
 .gear{position:absolute;right:62px;top:50px;width:68px;height:68px;border-radius:50%;display:grid;place-items:center;
   background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.55);
-  -webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);
-  box-shadow:inset 0 1px 1px rgba(255,255,255,.45),0 10px 34px rgba(0,0,0,.35);
-  transition:transform .18s,box-shadow .18s,background .18s,border-color .18s}
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.4);
+  transition:transform .18s}
 .gear svg{width:30px;height:30px}
 .gear.focused{transform:scale(1.1);background:rgba(255,255,255,.26);border-color:#fff;
-  box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 0 0 6px rgba(255,255,255,.2),0 0 34px rgba(255,255,255,.55),0 12px 40px rgba(0,0,0,.4)}
+  box-shadow:0 0 0 5px rgba(255,255,255,.22),0 0 18px rgba(255,255,255,.5)}
 
 /* ---------- settings popup ---------- */
 .menu{position:absolute;right:68px;top:136px;width:484px;padding:26px 24px 22px;border-radius:38px;
-  background:linear-gradient(180deg,rgba(120,126,140,.50),rgba(60,62,74,.58));
+  background:linear-gradient(180deg,rgba(96,100,114,.72),rgba(44,46,58,.78));
   border:1.5px solid rgba(255,255,255,.34);
-  -webkit-backdrop-filter:blur(30px) saturate(1.3);backdrop-filter:blur(30px) saturate(1.3);
-  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.4),inset 0 -14px 30px rgba(0,0,0,.18),0 28px 60px rgba(0,0,0,.45);
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.35);
   opacity:0;transform:translateY(-10px) scale(.97);transform-origin:top right;pointer-events:none;
   transition:opacity .2s,transform .2s}
 .menu.open{opacity:1;transform:none;pointer-events:auto}
@@ -58,30 +56,29 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
 /* ---------- floor glow (colour spill under the focused app) ---------- */
 .floor{position:absolute;bottom:-6px;left:0;width:520px;height:150px;border-radius:50%;pointer-events:none;
   background:radial-gradient(ellipse at center,rgba(var(--glow),.9) 0%,rgba(var(--glow),.45) 34%,rgba(var(--glow),0) 72%);
-  filter:blur(10px);opacity:0;transform:translateX(-50%);transition:left .28s cubic-bezier(.3,.8,.3,1),opacity .25s}
+  opacity:0;will-change:transform,opacity;transition:transform .28s cubic-bezier(.3,.8,.3,1),opacity .25s}
 .floor.on{opacity:.8}
 
 /* ---------- dock ---------- */
 .dock{position:absolute;left:70px;right:70px;bottom:104px;height:250px;border-radius:70px;
   background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
   border:2px solid rgba(255,255,255,.42);
-  -webkit-backdrop-filter:blur(10px) saturate(1.35);backdrop-filter:blur(10px) saturate(1.35);
-  box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -22px 50px rgba(60,28,8,.12),0 22px 70px rgba(0,0,0,.35);
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.5);
   opacity:0}
 .shell.ready .dock{animation:dockin .9s cubic-bezier(.2,.8,.2,1) both}
 @keyframes dockin{from{opacity:0;transform:translateY(60px) scale(.96)}to{opacity:1;transform:none}}
-.track{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:44px;padding:0 40px;overflow-x:hidden;overflow-y:hidden;scroll-behavior:smooth;border-radius:70px}
+.track{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:44px;padding:0 40px;overflow-x:hidden;overflow-y:hidden;border-radius:70px}
 .tile{position:relative;flex:none;width:330px;height:184px;border-radius:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   background:linear-gradient(180deg,rgba(86,82,94,.46),rgba(40,36,46,.54));
   border:1.5px solid rgba(255,255,255,.3);
-  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.4),inset 0 -18px 30px rgba(0,0,0,.28),0 10px 26px rgba(0,0,0,.3);
-  transition:transform .22s cubic-bezier(.3,.8,.3,1),border-color .2s,box-shadow .22s}
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.35),inset 0 -18px 30px rgba(0,0,0,.25);
+  will-change:transform;transition:transform .2s ease-out}
 .tile .ico{width:104px;height:104px;border-radius:24px;object-fit:contain;display:grid;place-items:center}
 .tile .ico svg{width:84px;height:84px}
 .tile .name{max-width:296px;font-size:26px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.95);text-shadow:0 2px 10px rgba(0,0,0,.5);transition:transform .22s}
 .tile.focused{transform:translateY(-10px) scale(1.09);border-color:rgba(var(--glow),.95);
   background:linear-gradient(180deg,rgba(104,100,112,.58),rgba(46,42,54,.66));
-  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),inset 0 -16px 34px rgba(var(--glow),.2),0 0 0 3px rgba(var(--glow),.55),0 0 34px rgba(var(--glow),.75),0 22px 46px rgba(0,0,0,.45)}
+  box-shadow:inset 0 -16px 30px rgba(var(--glow),.2),0 0 0 3px rgba(var(--glow),.6),0 0 20px rgba(var(--glow),.55)}
 .tile.focused .name{transform:translateY(-2px);font-weight:500}
 
 /* ---------- start-up screen ---------- */
@@ -215,7 +212,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
     var dockRect = $("dock").getBoundingClientRect(), r = t.getBoundingClientRect();
     var scale = shell.getBoundingClientRect().width / 1920;
     floor.style.setProperty("--glow", apps[idx].glow || "255,255,255");
-    floor.style.left = (r.left + r.width / 2) / scale + "px";
+    floor.style.transform = "translateX(" + ((r.left + r.width / 2) / scale - 260) + "px)";
     floor.style.bottom = (1080 - (dockRect.bottom / scale)) - 36 + "px";
     floor.classList.add("on");
   }
@@ -224,10 +221,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
     i = Math.max(0, Math.min(apps.length - 1, i));
     var moved = i !== idx; idx = i;
     var t = track.children[i];
-    if (t) track.scrollTo({ left: t.offsetLeft - (track.clientWidth - t.offsetWidth) / 2, behavior: "smooth" });
+    if (t) track.scrollTo({ left: t.offsetLeft - (track.clientWidth - t.offsetWidth) / 2, behavior: "auto" });
     paint();
     // floor glow follows the scroll as it settles
-    setTimeout(updateFloor, 120); setTimeout(updateFloor, 360);
+    
     if (moved) tick();
   }
 
@@ -329,7 +326,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
     var s = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, "");
     $("clock").textContent = s;
   }
-  clock(); setInterval(clock, 1000);
+  clock(); setInterval(clock, 15000);
 
   window.addEventListener("resize", updateFloor);
   render(); window.refresh(); window.showSplash();
