@@ -2,16 +2,12 @@ package com.wolf.launcher
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Base64
-import android.view.KeyEvent
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -22,10 +18,6 @@ import kotlin.concurrent.thread
 
 class MainActivity : Activity() {
     private lateinit var web: WebView
-    private var wasAsleep = false
-    private val screenOff = object : BroadcastReceiver() {
-        override fun onReceive(c: Context?, i: Intent?) { wasAsleep = true }
-    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,30 +32,11 @@ class MainActivity : Activity() {
         web.loadUrl("file:///android_asset/index.html")
         setContentView(web)
         web.requestFocus()
-        registerReceiver(screenOff, IntentFilter(Intent.ACTION_SCREEN_OFF))
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        try { unregisterReceiver(screenOff) } catch (e: Exception) {}
     }
 
     override fun onResume() {
         super.onResume()
         web.evaluateJavascript("window.refresh && refresh()", null)
-        if (wasAsleep) {                       // TV / box just woke up: play the start-up screen
-            wasAsleep = false
-            web.evaluateJavascript("window.showSplash && showSplash()", null)
-        }
-    }
-
-    // Send the remote's Back button to the page (closes the settings popup) instead of ignoring it.
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            web.evaluateJavascript("window.onBack && onBack()", null)
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
     }
 
     // A home screen should never close when Back is pressed.
