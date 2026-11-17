@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920" />
+<title>Wolfbox Launcher</title>
+<style>
+@font-face{font-family:Inter;font-weight:300;src:url(fonts/Inter-300.otf) format("opentype")}
+@font-face{font-family:Inter;font-weight:400;src:url(fonts/Inter-400.otf) format("opentype")}
+@font-face{font-family:Inter;font-weight:500;src:url(fonts/Inter-500.otf) format("opentype")}
+@font-face{font-family:Inter;font-weight:600;src:url(fonts/Inter-600.otf) format("opentype")}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#04070d}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outline:none}
+
+.shell{position:relative;width:100vw;height:100vh;overflow:hidden;isolation:isolate}
+
+/* ---------- backgrounds (cross-fade night <-> day) ---------- */
+.bg{position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease}
+.bg.night{background-image:url(bg-night.jpg)}
+.bg.day{background-image:url(bg-day.jpg)}
+.shell[data-bg="night"] .bg.night,.shell[data-bg="day"] .bg.day{opacity:1}
+.shade{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.22) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.28) 100%)}
+
+/* ---------- clock ---------- */
+.clock{position:absolute;left:70px;top:44px;font-size:112px;font-weight:300;line-height:1;letter-spacing:-.045em;
+  color:rgba(255,255,255,.96);text-shadow:0 6px 34px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
+
+/* ---------- settings button ---------- */
+.gear{position:absolute;right:62px;top:50px;width:68px;height:68px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.55);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.45),0 10px 34px rgba(0,0,0,.35);
+  transition:transform .18s,box-shadow .18s,background .18s,border-color .18s}
+.gear svg{width:30px;height:30px}
+.gear.focused{transform:scale(1.1);background:rgba(255,255,255,.26);border-color:#fff;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 0 0 6px rgba(255,255,255,.2),0 0 34px rgba(255,255,255,.55),0 12px 40px rgba(0,0,0,.4)}
+
+/* ---------- settings popup ---------- */
+.menu{position:absolute;right:68px;top:136px;width:484px;padding:26px 24px 22px;border-radius:38px;
+  background:linear-gradient(180deg,rgba(120,126,140,.50),rgba(60,62,74,.58));
+  border:1.5px solid rgba(255,255,255,.34);
+  -webkit-backdrop-filter:blur(30px) saturate(1.3);backdrop-filter:blur(30px) saturate(1.3);
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.4),inset 0 -14px 30px rgba(0,0,0,.18),0 28px 60px rgba(0,0,0,.45);
+  opacity:0;transform:translateY(-10px) scale(.97);transform-origin:top right;pointer-events:none;
+  transition:opacity .2s,transform .2s}
+.menu.open{opacity:1;transform:none;pointer-events:auto}
+.menu h2{font-size:27px;font-weight:500;padding:0 8px 16px;color:rgba(255,255,255,.94)}
+.row{display:flex;width:100%;justify-content:space-between;align-items:center;height:64px;padding:0 26px;border-radius:20px;
+  font-size:30px;font-weight:400;color:rgba(255,255,255,.95);text-align:left;transition:background .15s}
+.row + .row{margin-top:8px}
+.row .val{font-weight:400;color:rgba(255,255,255,.92)}
+.row.focused{background:rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+
+/* ---------- floor glow (colour spill under the focused app) ---------- */
+.floor{position:absolute;bottom:-6px;left:0;width:520px;height:150px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(var(--glow),.9) 0%,rgba(var(--glow),.45) 34%,rgba(var(--glow),0) 72%);
+  filter:blur(10px);opacity:0;transform:translateX(-50%);transition:left .28s cubic-bezier(.3,.8,.3,1),opacity .25s}
+.floor.on{opacity:.8}
+
+/* ---------- dock ---------- */
+.dock{position:absolute;left:70px;right:70px;bottom:104px;height:250px;border-radius:70px;
+  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.14));
+  border:2px solid rgba(255,255,255,.5);
+  -webkit-backdrop-filter:blur(34px) saturate(1.5);backdrop-filter:blur(34px) saturate(1.5);
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.65),inset 0 -22px 50px rgba(60,28,8,.25),0 22px 70px rgba(0,0,0,.5);
+  animation:dockin .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes dockin{from{opacity:0;transform:translateY(60px) scale(.96)}to{opacity:1;transform:none}}
+.track{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:44px;padding:0 40px;overflow-x:hidden;overflow-y:hidden;scroll-behavior:smooth;border-radius:70px}
+.tile{position:relative;flex:none;width:330px;height:184px;border-radius:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:linear-gradient(180deg,rgba(86,82,94,.78),rgba(40,36,46,.86));
+  border:1.5px solid rgba(255,255,255,.28);
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.4),inset 0 -18px 30px rgba(0,0,0,.28),0 10px 26px rgba(0,0,0,.3);
+  transition:transform .22s cubic-bezier(.3,.8,.3,1),border-color .2s,box-shadow .22s}
+.tile .ico{width:104px;height:104px;border-radius:24px;object-fit:contain;display:grid;place-items:center}
+.tile .ico svg{width:84px;height:84px}
+.tile .name{max-width:296px;font-size:26px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.95);text-shadow:0 2px 10px rgba(0,0,0,.5);transition:transform .22s}
+.tile.focused{transform:translateY(-10px) scale(1.09);border-color:rgba(var(--glow),.95);
+  background:linear-gradient(180deg,rgba(104,100,112,.82),rgba(46,42,54,.9));
+  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),inset 0 -16px 34px rgba(var(--glow),.2),0 0 0 3px rgba(var(--glow),.55),0 0 34px rgba(var(--glow),.75),0 22px 46px rgba(0,0,0,.45)}
+.tile.focused .name{transform:translateY(-2px);font-weight:500}
+</style>
+</head>
+<body>
+<main class="shell" id="shell" data-bg="night">
+  <div class="bg night"></div><div class="bg day"></div><div class="shade"></div>
+
+  <time class="clock" id="clock">9:41</time>
+
+  <button class="gear" id="gear" type="button" aria-label="Open settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3.2"/></svg>
+  </button>
+
+  <section class="menu" id="menu" aria-label="Settings">
+    <h2>Settings</h2>
+    <button class="row" id="rowSound" type="button"><span>Sound</span><span class="val" id="valSound">On</span></button>
+    <button class="row" id="rowBg" type="button"><span>Background</span><span class="val" id="valBg">Night</span></button>
+    <button class="row" id="rowSys" type="button"><span>System settings</span><span class="val">›</span></button>
+  </section>
+
+  <div class="floor" id="floor"></div>
+  <nav class="dock" id="dock" aria-label="Launcher apps"><div class="track" id="track"></div></nav>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var shell = $("shell"), track = $("track"), floor = $("floor"), gear = $("gear"), menu = $("menu");
+  var rows = [$("rowSound"), $("rowBg"), $("rowSys")];
+
+  /* ---------- persisted settings (localStorage may be unavailable) ---------- */
+  function load(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  var state = { sound: load("wb.sound", "on") === "on", bg: load("wb.bg", "night") === "day" ? "day" : "night" };
+
+  /* ---------- fallback apps (shown when not running inside the Android launcher) ---------- */
+  function glyph(paths) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + paths + "</svg>";
+  }
+  var FALLBACK = [
+    { id: "clipbox", key: "clipbox", title: "ClipBox", svg: glyph('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/>'), glow: "255,40,50" },
+    { id: "tizen", key: "tizen", title: "TizenTube", svg: glyph('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'), glow: "30,200,255" },
+    { id: "arvio", key: "arvio", title: "Arvio", svg: glyph('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>'), glow: "255,92,170" }
+  ];
+
+  var apps = FALLBACK.slice();
+  var zone = "dock";          // dock | gear | menu
+  var idx = 0, rowIdx = 0, menuOpen = false;
+
+  /* ---------- glow colour: dominant saturated colour of the app icon ---------- */
+  function iconGlow(img, done) {
+    var fin = function () {
+      try {
+        var c = document.createElement("canvas"); c.width = c.height = 32;
+        var g = c.getContext("2d"); g.drawImage(img, 0, 0, 32, 32);
+        var d = g.getImageData(0, 0, 32, 32).data, r = 0, gg = 0, b = 0, w = 0;
+        for (var i = 0; i < d.length; i += 4) {
+          var a = d[i + 3] / 255; if (a < .5) continue;
+          var mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]);
+          var sat = mx ? (mx - mn) / mx : 0, wt = a * (sat * sat + 0.02) * (mx / 255 + .2);
+          r += d[i] * wt; gg += d[i + 1] * wt; b += d[i + 2] * wt; w += wt;
+        }
+        if (!w) return done("255,255,255");
+        r /= w; gg /= w; b /= w;
+        var mx2 = Math.max(r, gg, b), mn2 = Math.min(r, gg, b);
+        if ((mx2 - mn2) / (mx2 || 1) < .22) return done("255,255,255");      // white / grey icon → white glow
+        var k = 235 / mx2;                                                     // keep the glow bright
+        done(Math.round(Math.min(255, r * k)) + "," + Math.round(Math.min(255, gg * k)) + "," + Math.round(Math.min(255, b * k)));
+      } catch (e) { done("255,255,255"); }
+    };
+    if (img.complete && img.naturalWidth) fin(); else img.addEventListener("load", fin, { once: true });
+  }
+
+  /* ---------- rendering ---------- */
+  function render() {
+    track.innerHTML = "";
+    apps.forEach(function (a, i) {
+      var t = document.createElement("button");
+      t.type = "button"; t.className = "tile"; t.setAttribute("aria-label", "Open " + a.title);
+      t.style.setProperty("--glow", a.glow || "255,255,255");
+      if (a.img) {
+        var im = new Image(); im.className = "ico"; im.alt = ""; im.src = a.img; t.appendChild(im);
+        if (!a.glow) iconGlow(im, function (c) { a.glow = c; t.style.setProperty("--glow", c); updateFloor(); });
+      } else {
+        var d = document.createElement("div"); d.className = "ico"; d.innerHTML = a.svg || ""; t.appendChild(d);
+      }
+      var n = document.createElement("span"); n.className = "name"; n.textContent = a.title; t.appendChild(n);
+      t.addEventListener("mouseenter", function () { zone = "dock"; closeMenu(); setIdx(i, true); });
+      t.addEventListener("click", function () { zone = "dock"; setIdx(i, true); launch(a); });
+      track.appendChild(t);
+    });
+    paint();
+  }
+
+  function paint() {
+    var tiles = track.children;
+    for (var i = 0; i < tiles.length; i++) tiles[i].classList.toggle("focused", zone === "dock" && i === idx);
+    gear.classList.toggle("focused", zone === "gear");
+    menu.classList.toggle("open", menuOpen);
+    rows.forEach(function (r, i) { r.classList.toggle("focused", menuOpen && zone === "menu" && i === rowIdx); });
+    $("valSound").textContent = state.sound ? "On" : "Off";
+    $("valBg").textContent = state.bg === "night" ? "Night" : "Day";
+    shell.setAttribute("data-bg", state.bg);
+    updateFloor();
+  }
+
+  function updateFloor() {
+    var t = track.children[idx];
+    if (zone !== "dock" || !t) { floor.classList.remove("on"); return; }
+    var dockRect = $("dock").getBoundingClientRect(), r = t.getBoundingClientRect();
+    var scale = shell.getBoundingClientRect().width / 1920;
+    floor.style.setProperty("--glow", apps[idx].glow || "255,255,255");
+    floor.style.left = (r.left + r.width / 2) / scale + "px";
+    floor.style.bottom = (1080 - (dockRect.bottom / scale)) - 36 + "px";
+    floor.classList.add("on");
+  }
+
+  function setIdx(i, quiet) {
+    i = Math.max(0, Math.min(apps.length - 1, i));
+    var moved = i !== idx; idx = i;
+    var t = track.children[i];
+    if (t) track.scrollTo({ left: t.offsetLeft - (track.clientWidth - t.offsetWidth) / 2, behavior: "smooth" });
+    paint();
+    // floor glow follows the scroll as it settles
+    setTimeout(updateFloor, 120); setTimeout(updateFloor, 360);
+    if (moved) tick();
+  }
+
+  /* ---------- sound: soft UI ticks ---------- */
+  var ac = null;
+  function tick(freq) {
+    if (!state.sound) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+      o.type = "sine"; o.frequency.setValueAtTime(freq || 1250, t);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.06);
+    } catch (e) {}
+  }
+
+  /* ---------- Android bridge ---------- */
+  function launch(a) {
+    if (!window.Android) return;
+    if (a.pkg) window.Android.launchPkg(a.pkg); else window.Android.launch(a.title);
+  }
+  window.onApps = function (list) {
+    if (!list) return;
+    var cur = apps[idx] && apps[idx].id;
+    apps = FALLBACK.map(function (f) {
+      var hit = list.filter(function (e) { return (e.label || "").toLowerCase().indexOf(f.key) >= 0; })[0];
+      if (!hit) return f;                                   // not installed: keep a placeholder tile
+      return { id: f.id, key: f.key, pkg: hit.pkg, title: f.title, glow: f.glow, img: "data:image/png;base64," + hit.icon };
+    });
+    var k = apps.findIndex(function (a) { return a.id === cur; }); idx = k >= 0 ? k : 0;
+    render(); setIdx(idx, true);
+  };
+  window.refresh = function () { if (window.Android) window.Android.apps("onApps"); };
+
+  /* ---------- settings menu ---------- */
+  function openMenu() { menuOpen = true; zone = "menu"; rowIdx = 0; paint(); tick(1500); }
+  function closeMenu() { if (!menuOpen) return; menuOpen = false; if (zone === "menu") zone = "gear"; paint(); }
+  function activateRow(i) {
+    if (i === 0) { state.sound = !state.sound; save("wb.sound", state.sound ? "on" : "off"); tick(1500); }
+    else if (i === 1) { state.bg = state.bg === "night" ? "day" : "night"; save("wb.bg", state.bg); tick(); }
+    else if (window.Android) window.Android.launch("__settings");
+    paint();
+  }
+  rows.forEach(function (r, i) {
+    r.addEventListener("mouseenter", function () { zone = "menu"; rowIdx = i; paint(); });
+    r.addEventListener("click", function () { zone = "menu"; rowIdx = i; activateRow(i); });
+  });
+  gear.addEventListener("mouseenter", function () { zone = "gear"; paint(); });
+  gear.addEventListener("click", function () { if (menuOpen) { closeMenu(); } else { openMenu(); } });
+
+  /* ---------- remote / keyboard ---------- */
+  window.addEventListener("keydown", function (e) {
+    var k = e.key, handled = true;
+    if (zone === "dock") {
+      if (k === "ArrowRight") setIdx(idx + 1);
+      else if (k === "ArrowLeft") setIdx(idx - 1);
+      else if (k === "ArrowUp") { zone = "gear"; paint(); tick(); }
+      else if (k === "Enter") launch(apps[idx]);
+      else handled = false;
+    } else if (zone === "gear") {
+      if (k === "ArrowDown") { if (menuOpen) { zone = "menu"; rowIdx = 0; paint(); tick(); } else { zone = "dock"; paint(); tick(); } }
+      else if (k === "Enter") { menuOpen ? closeMenu() : openMenu(); }
+      else if (k === "Escape" || k === "Backspace") closeMenu();
+      else handled = false;
+    } else { // menu
+      if (k === "ArrowDown") { rowIdx = Math.min(rows.length - 1, rowIdx + 1); paint(); tick(); }
+      else if (k === "ArrowUp") { if (rowIdx === 0) { zone = "gear"; paint(); } else { rowIdx--; paint(); } tick(); }
+      else if (k === "Enter" || k === "ArrowRight" || k === "ArrowLeft") { if (rowIdx < 2 || k === "Enter") activateRow(rowIdx); }
+      else if (k === "Escape" || k === "Backspace") { closeMenu(); }
+      else handled = false;
+    }
+    if (handled) e.preventDefault();
+  });
+
+  /* ---------- clock ---------- */
+  function clock() {
+    var s = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, "");
+    $("clock").textContent = s;
+  }
+  clock(); setInterval(clock, 1000);
+
+  window.addEventListener("resize", updateFloor);
+  render(); window.refresh();
+})();
+</script>
+</body>
+</html>
