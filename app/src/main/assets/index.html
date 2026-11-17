@@ -63,28 +63,49 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
 
 /* ---------- dock ---------- */
 .dock{position:absolute;left:70px;right:70px;bottom:104px;height:250px;border-radius:70px;
-  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.14));
-  border:2px solid rgba(255,255,255,.5);
-  -webkit-backdrop-filter:blur(34px) saturate(1.5);backdrop-filter:blur(34px) saturate(1.5);
-  box-shadow:inset 0 2px 1px rgba(255,255,255,.65),inset 0 -22px 50px rgba(60,28,8,.25),0 22px 70px rgba(0,0,0,.5);
-  animation:dockin .9s cubic-bezier(.2,.8,.2,1) both}
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
+  border:2px solid rgba(255,255,255,.42);
+  -webkit-backdrop-filter:blur(10px) saturate(1.35);backdrop-filter:blur(10px) saturate(1.35);
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -22px 50px rgba(60,28,8,.12),0 22px 70px rgba(0,0,0,.35);
+  opacity:0}
+.shell.ready .dock{animation:dockin .9s cubic-bezier(.2,.8,.2,1) both}
 @keyframes dockin{from{opacity:0;transform:translateY(60px) scale(.96)}to{opacity:1;transform:none}}
 .track{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:44px;padding:0 40px;overflow-x:hidden;overflow-y:hidden;scroll-behavior:smooth;border-radius:70px}
 .tile{position:relative;flex:none;width:330px;height:184px;border-radius:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  background:linear-gradient(180deg,rgba(86,82,94,.78),rgba(40,36,46,.86));
-  border:1.5px solid rgba(255,255,255,.28);
+  background:linear-gradient(180deg,rgba(86,82,94,.46),rgba(40,36,46,.54));
+  border:1.5px solid rgba(255,255,255,.3);
   box-shadow:inset 0 1.5px 1px rgba(255,255,255,.4),inset 0 -18px 30px rgba(0,0,0,.28),0 10px 26px rgba(0,0,0,.3);
   transition:transform .22s cubic-bezier(.3,.8,.3,1),border-color .2s,box-shadow .22s}
 .tile .ico{width:104px;height:104px;border-radius:24px;object-fit:contain;display:grid;place-items:center}
 .tile .ico svg{width:84px;height:84px}
 .tile .name{max-width:296px;font-size:26px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.95);text-shadow:0 2px 10px rgba(0,0,0,.5);transition:transform .22s}
 .tile.focused{transform:translateY(-10px) scale(1.09);border-color:rgba(var(--glow),.95);
-  background:linear-gradient(180deg,rgba(104,100,112,.82),rgba(46,42,54,.9));
+  background:linear-gradient(180deg,rgba(104,100,112,.58),rgba(46,42,54,.66));
   box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),inset 0 -16px 34px rgba(var(--glow),.2),0 0 0 3px rgba(var(--glow),.55),0 0 34px rgba(var(--glow),.75),0 22px 46px rgba(0,0,0,.45)}
 .tile.focused .name{transform:translateY(-2px);font-weight:500}
+
+/* ---------- start-up screen ---------- */
+.splash{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:#04070d url(bg-night.jpg) center/cover;transition:opacity .9s ease,visibility 0s linear .9s}
+.splash::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,7,13,0) 52%,rgba(4,7,13,.92) 78%,#04070d 100%),radial-gradient(ellipse at center,rgba(4,7,13,.1) 0%,rgba(4,7,13,.72) 100%)}
+.splash.hide{opacity:0;visibility:hidden;pointer-events:none}
+.sp-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:30px;animation:spin 1.3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes spin{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+.sp-mark{width:168px;height:168px;filter:drop-shadow(0 0 28px rgba(255,170,70,.55)) drop-shadow(0 6px 24px rgba(0,0,0,.6))}
+.sp-name{font-size:54px;font-weight:600;color:rgba(255,255,255,.96);text-shadow:0 4px 26px rgba(0,0,0,.6);animation:spname 1.8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes spname{from{letter-spacing:.1em;opacity:0}to{letter-spacing:.42em;opacity:1}}
+.sp-bar{width:300px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:14px}
+.sp-bar span{display:block;height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,#ffb347,#fff1d0);box-shadow:0 0 16px rgba(255,179,71,.9);transform-origin:left;animation:spbar 2.3s cubic-bezier(.4,.1,.3,1) both}
+@keyframes spbar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 </style>
 </head>
 <body>
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="sp-inner" id="spInner">
+    <svg class="sp-mark" viewBox="0 0 64 64"><path fill="#fff" d="M8 6l16 14h16L56 6l-2 28-10 18-12 8-12-8L10 34z"/><path fill="#000" fill-opacity=".45" d="M20 34l8 3-3 3zM44 34l-8 3 3 3z"/></svg>
+    <div class="sp-name">WOLFBOX</div>
+    <div class="sp-bar"><span></span></div>
+  </div>
+</div>
 <main class="shell" id="shell" data-bg="night">
   <div class="bg night"></div><div class="bg day"></div><div class="shade"></div>
 
@@ -257,9 +278,31 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
   gear.addEventListener("mouseenter", function () { zone = "gear"; paint(); });
   gear.addEventListener("click", function () { if (menuOpen) { closeMenu(); } else { openMenu(); } });
 
+  /* ---------- start-up screen ---------- */
+  var splash = $("splash"), splashOn = false, splashTimer = null;
+  function finishSplash() {
+    if (!splashOn) return; splashOn = false; clearTimeout(splashTimer);
+    splash.classList.add("hide"); shell.classList.remove("ready"); void shell.offsetWidth; shell.classList.add("ready");
+  }
+  window.showSplash = function () {
+    splashOn = true; shell.classList.remove("ready"); zone = "dock"; menuOpen = false; paint();
+    var inner = $("spInner"), c = inner.cloneNode(true); inner.parentNode.replaceChild(c, inner); c.id = "spInner"; // restart animations
+    splash.classList.remove("hide");
+    clearTimeout(splashTimer); splashTimer = setTimeout(finishSplash, 3000);
+  };
+
+  /* ---------- Back button (called from Android, also Esc / Backspace) ---------- */
+  window.onBack = function () {
+    if (splashOn) return finishSplash();
+    if (menuOpen) { menuOpen = false; zone = "dock"; paint(); tick(); }
+    else if (zone === "gear") { zone = "dock"; paint(); }
+  };
+
   /* ---------- remote / keyboard ---------- */
   window.addEventListener("keydown", function (e) {
     var k = e.key, handled = true;
+    if (splashOn) { finishSplash(); e.preventDefault(); return; }
+    if (k === "Escape" || k === "Backspace" || k === "GoBack") { window.onBack(); e.preventDefault(); return; }
     if (zone === "dock") {
       if (k === "ArrowRight") setIdx(idx + 1);
       else if (k === "ArrowLeft") setIdx(idx - 1);
@@ -289,7 +332,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;outlin
   clock(); setInterval(clock, 1000);
 
   window.addEventListener("resize", updateFloor);
-  render(); window.refresh();
+  render(); window.refresh(); window.showSplash();
 })();
 </script>
 </body>
